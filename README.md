@@ -102,7 +102,7 @@ Sledeće funkcionalnosti su najavljene na landing stranici, ali još nisu implem
 
 ## Live Demo
 
-🔗 _Link će biti dodat ovde nakon deploy-a._
+🔗 **[https://filipfilipovic-cell.github.io/SmartDesk-/](https://filipfilipovic-cell.github.io/SmartDesk-/)**
 
 ---
 
