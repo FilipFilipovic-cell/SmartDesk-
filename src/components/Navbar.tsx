@@ -1,12 +1,14 @@
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import Logo from "./Logo";
 import { nav } from "../data/content";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -22,6 +24,21 @@ export default function Navbar() {
     };
   }, [open]);
 
+  const handleAnchor = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    setOpen(false);
+    const id = href.slice(1);
+    // Ako nismo na landing stranici, prvo idi na "/" pa onda scroll
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 120);
+    } else {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -36,15 +53,26 @@ export default function Navbar() {
         </a>
 
         <div className="hidden md:flex items-center gap-9">
-          {nav.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="text-[14.5px] text-[--text-muted] hover:text-white transition-colors"
-            >
-              {item.label}
-            </a>
-          ))}
+          {nav.map((item) =>
+            item.href.startsWith("/") ? (
+              <Link
+                key={item.href}
+                to={item.href}
+                className="text-[14.5px] text-[--text-muted] hover:text-white transition-colors"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={(e) => handleAnchor(e, item.href)}
+                className="text-[14.5px] text-[--text-muted] hover:text-white transition-colors cursor-pointer"
+              >
+                {item.label}
+              </a>
+            )
+          )}
         </div>
 
         <div className="hidden md:flex items-center gap-3">
@@ -74,16 +102,27 @@ export default function Navbar() {
 
       {open && (
         <div className="md:hidden bg-[#0a0d17] border-t border-white/[0.06] px-5 pb-6 pt-2 flex flex-col gap-1 animate-fade-up">
-          {nav.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className="text-[15px] text-[--text-muted] hover:text-white py-3 border-b border-white/[0.05]"
-            >
-              {item.label}
-            </a>
-          ))}
+          {nav.map((item) =>
+            item.href.startsWith("/") ? (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => setOpen(false)}
+                className="text-[15px] text-[--text-muted] hover:text-white py-3 border-b border-white/[0.05]"
+              >
+                {item.label}
+              </Link>
+            ) : (
+              <a
+                key={item.href}
+                href={item.href}
+                onClick={(e) => handleAnchor(e, item.href)}
+                className="text-[15px] text-[--text-muted] hover:text-white py-3 border-b border-white/[0.05] cursor-pointer"
+              >
+                {item.label}
+              </a>
+            )
+          )}
           <div className="flex flex-col gap-3 pt-4">
             <Link
               to="/prijava"
