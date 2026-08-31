@@ -50,6 +50,11 @@ export default function Saloni() {
             </Link>
           </div>
 
+          <div className="mb-6 flex items-center gap-2 text-sm bg-[--accent-soft] border border-[--accent-line] text-[--accent-2] rounded-xl px-4 py-3">
+            <span className="text-xs font-semibold bg-[--accent] text-white px-2 py-0.5 rounded-full">DEMO</span>
+            <span>Demo varijanta — prikazani saloni su ilustrativni. Prijavite se kao vlasnik da dodate svoj salon na <code className="bg-white/10 px-1 py-0.5 rounded text-xs">/admin/saloni</code>.</span>
+          </div>
+
           {!configured && (
             <div className="mb-6 text-sm text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
               Supabase nije konfigurisan — proveri <code>.env</code> (VITE_SUPABASE_URL). Podaci neće biti učitani.
