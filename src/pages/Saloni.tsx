@@ -37,9 +37,7 @@ export default function Saloni() {
                 Saloni
               </h1>
               <p className="text-[--text-muted] mt-2 max-w-xl">
-                Pregled salona iz baze. Podaci dolaze uživo iz Supabase tabele{" "}
-                <code className="text-xs bg-white/[0.07] px-1.5 py-0.5 rounded">salons</code> + slike iz{" "}
-                <code className="text-xs bg-white/[0.07] px-1.5 py-0.5 rounded">salon-images</code>.
+                Pronađite frizerske salone, berbernice i salone lepote u svom gradu. Filtrirajte po kategoriji.
               </p>
             </div>
             <Link
