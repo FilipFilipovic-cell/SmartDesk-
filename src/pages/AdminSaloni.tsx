@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import { useSalons } from "../hooks/useSalons";
+import { useAuth } from "../context/AuthContext";
 import {
   SALON_KATEGORIJE,
   type Salon,
@@ -11,9 +11,10 @@ import {
   updateSalonWithImage,
   deleteSalon,
   deleteSalonImageByUrl,
+  getMySalons,
 } from "../lib/salons";
 import { isSupabaseConfigured } from "../lib/supabase";
-import { ArrowLeft, Trash2, Pencil, Plus, X, ImageOff, Loader2 } from "lucide-react";
+import { ArrowLeft, Trash2, Pencil, Plus, X, ImageOff, Loader2, LogOut } from "lucide-react";
 
 type FormState = {
   ime: string;
@@ -32,7 +33,11 @@ const emptyForm: FormState = {
 };
 
 export default function AdminSaloni() {
-  const { salons, loading, error, refresh } = useSalons();
+  const { user, loading: authLoading, signOut } = useAuth();
+  const navigate = useNavigate();
+  const [salons, setSalons] = useState<Salon[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [editing, setEditing] = useState<Salon | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -40,7 +45,28 @@ export default function AdminSaloni() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const configured = isSupabaseConfigured();
 
-  // cleanup preview URL
+  const refresh = async () => {
+    if (!user) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await getMySalons();
+      setSalons(data);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : String(e));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate("/prijava");
+      return;
+    }
+    if (user) refresh();
+  }, [user, authLoading]);
+
   useEffect(() => {
     return () => {
       if (form.preview) URL.revokeObjectURL(form.preview);
@@ -94,6 +120,11 @@ export default function AdminSaloni() {
       setMsg("Supabase nije konfigurisan.");
       return;
     }
+    // 1 vlasnik = 1 salon ograničenje (može se ukloniti za Business)
+    if (!editing && salons.length >= 1) {
+      setMsg("Već imate salon. Jedan nalog = jedan salon. Obrišite stari ili uredite postojeći.");
+      return;
+    }
     setSubmitting(true);
     setMsg(null);
     try {
@@ -116,7 +147,12 @@ export default function AdminSaloni() {
       setForm(emptyForm);
       await refresh();
     } catch (err: unknown) {
-      setMsg(`Greška: ${err instanceof Error ? err.message : String(err)}`);
+      const m = err instanceof Error ? err.message : String(err);
+      if (m.includes("row-level security") || m.includes("violates")) {
+        setMsg("Greška: nemate dozvolu. Proverite da li ste pokrenuli supabase/03_add_owner.sql");
+      } else {
+        setMsg(`Greška: ${m}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -137,20 +173,52 @@ export default function AdminSaloni() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="bg-[--bg] min-h-screen grid place-items-center text-[--text-muted]">
+        <Loader2 className="animate-spin" /> Učitavanje...
+      </div>
+    );
+  }
+
+  if (!user) return null;
+
   return (
     <div className="bg-[--bg] min-h-screen">
       <Navbar />
       <main className="pt-24 pb-16">
         <div className="mx-auto max-w-7xl px-5 sm:px-8">
-          <Link
-            to="/saloni"
-            className="inline-flex items-center gap-2 text-sm text-[--text-muted] hover:text-white transition-colors mb-6"
-          >
-            <ArrowLeft size={16} /> Nazad na salone
-          </Link>
+          <div className="flex items-center justify-between mb-6 gap-3">
+            <Link
+              to="/saloni"
+              className="inline-flex items-center gap-2 text-sm text-[--text-muted] hover:text-white transition-colors"
+            >
+              <ArrowLeft size={16} /> Nazad na salone
+            </Link>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-[--text-faint] hidden sm:inline">
+                Ulogovan: {user.email}
+              </span>
+              <button
+                onClick={async () => {
+                  await signOut();
+                  navigate("/prijava");
+                }}
+                className="inline-flex items-center gap-1.5 text-xs border border-white/15 rounded-full px-3 py-1.5 hover:bg-white/5"
+              >
+                <LogOut size={13} /> Odjavi se
+              </button>
+            </div>
+          </div>
+
+          <div className="mb-6">
+            <h1 className="font-display text-2xl font-bold">Moj salon</h1>
+            <p className="text-sm text-[--text-muted] mt-1">
+              Samo vlasnik (uložen nalog <b>{user.email}</b>) može da doda/menja/briše svoj salon. Ostali korisnici ne mogu da diraju tuđe salone.
+            </p>
+          </div>
 
           <div className="flex flex-col lg:flex-row gap-8">
-            {/* Forma */}
             <div className="lg:w-[420px] shrink-0">
               <div className="bg-[--surface] border border-[--border] rounded-2xl p-6 sticky top-24">
                 <h2 className="font-display text-xl font-bold flex items-center gap-2">
@@ -158,7 +226,7 @@ export default function AdminSaloni() {
                   {editing ? "Izmeni salon" : "Dodaj salon"}
                 </h2>
                 <p className="text-sm text-[--text-muted] mt-1">
-                  Polja: <span className="text-white">ime*</span>, slika (storage), opis, kategorija*
+                  Jedan nalog = jedan salon. Polja: <span className="text-white">ime*</span>, slika, opis, kategorija*
                 </p>
 
                 {!configured && (
@@ -268,12 +336,10 @@ export default function AdminSaloni() {
               </div>
             </div>
 
-            {/* Lista */}
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-3 mb-4">
                 <h3 className="font-semibold">
-                  Svi saloni{" "}
-                  <span className="text-[--text-muted] font-normal">({salons.length})</span>
+                  Moj salon <span className="text-[--text-muted] font-normal">({salons.length}/1)</span>
                 </h3>
                 <button
                   onClick={refresh}
@@ -286,7 +352,7 @@ export default function AdminSaloni() {
 
               {loading ? (
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {Array.from({ length: 4 }).map((_, i) => (
+                  {Array.from({ length: 2 }).map((_, i) => (
                     <div key={i} className="bg-[--surface] border border-[--border] rounded-2xl p-4 animate-pulse">
                       <div className="h-36 bg-white/[0.06] rounded-xl mb-3" />
                       <div className="h-4 bg-white/[0.06] rounded w-2/3" />
@@ -294,12 +360,10 @@ export default function AdminSaloni() {
                   ))}
                 </div>
               ) : error ? (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-200 text-sm">
-                  {error}
-                </div>
+                <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-4 text-red-200 text-sm">{error}</div>
               ) : salons.length === 0 ? (
                 <div className="text-center py-14 bg-[--surface] border border-[--border] rounded-2xl text-[--text-muted] text-sm">
-                  Još nema salona. Dodaj prvi preko forme levo.
+                  Još nemate salon. Dodajte ga preko forme levo — biće vezan za vaš nalog i vidljiv svima na /saloni.
                 </div>
               ) : (
                 <div className="grid sm:grid-cols-2 gap-4">
@@ -324,9 +388,7 @@ export default function AdminSaloni() {
                       </div>
                       <div className="p-4 flex flex-col flex-1">
                         <h4 className="font-semibold leading-tight">{s.ime}</h4>
-                        <p className="text-sm text-[--text-muted] mt-1 line-clamp-2 flex-1">
-                          {s.opis || "Bez opisa."}
-                        </p>
+                        <p className="text-sm text-[--text-muted] mt-1 line-clamp-2 flex-1">{s.opis || "Bez opisa."}</p>
                         <div className="flex gap-2 mt-3">
                           <button
                             onClick={() => startEdit(s)}
@@ -339,12 +401,7 @@ export default function AdminSaloni() {
                             disabled={deleteId === s.id}
                             className="inline-flex items-center justify-center gap-1.5 bg-red-500/10 border border-red-500/20 text-red-300 rounded-full px-4 py-2 text-xs font-medium hover:bg-red-500/15 disabled:opacity-50"
                           >
-                            {deleteId === s.id ? (
-                              <Loader2 size={13} className="animate-spin" />
-                            ) : (
-                              <Trash2 size={13} />
-                            )}{" "}
-                            Obriši
+                            {deleteId === s.id ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />} Obriši
                           </button>
                         </div>
                       </div>

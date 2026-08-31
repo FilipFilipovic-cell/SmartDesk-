@@ -26,6 +26,7 @@ export type Salon = {
   slika: string | null; // public URL iz storage-a
   opis: string | null;
   kategorija: SalonKategorija;
+  owner_id: string | null;
   created_at: string;
   updated_at: string;
 };
@@ -53,6 +54,20 @@ export async function getSalons(): Promise<Salon[]> {
   return data as Salon[];
 }
 
+export async function getMySalons(): Promise<Salon[]> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data, error } = await supabase
+    .from("salons")
+    .select("*")
+    .eq("owner_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw error;
+  return data as Salon[];
+}
+
 export async function getSalonById(id: string): Promise<Salon | null> {
   const { data, error } = await supabase
     .from("salons")
@@ -67,9 +82,13 @@ export async function getSalonById(id: string): Promise<Salon | null> {
 }
 
 export async function createSalon(payload: SalonInsert): Promise<Salon> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Morate biti prijavljeni kao vlasnik.");
   const { data, error } = await supabase
     .from("salons")
-    .insert(payload)
+    .insert({ ...payload, owner_id: user.id } as unknown as Record<string, unknown>)
     .select()
     .single();
   if (error) throw error;
