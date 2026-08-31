@@ -48,9 +48,17 @@ export default function Navbar() {
       }`}
     >
       <nav className="mx-auto max-w-7xl px-5 sm:px-8 h-16 flex items-center justify-between">
-        <a href="#top" className="focus-visible:outline-none">
+        <Link
+          to="/"
+          onClick={() => {
+            setOpen(false);
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          }}
+          className="focus-visible:outline-none"
+          aria-label="Idi na početnu"
+        >
           <Logo />
-        </a>
+        </Link>
 
         <div className="hidden md:flex items-center gap-9">
           {nav.map((item) =>
