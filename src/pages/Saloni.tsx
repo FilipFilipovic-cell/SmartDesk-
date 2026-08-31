@@ -12,12 +12,24 @@ type Filter = SalonKategorija | "Sve";
 export default function Saloni() {
   const { salons, loading, error } = useSalons();
   const [filter, setFilter] = useState<Filter>("Sve");
+  const [gradFilter, setGradFilter] = useState<string>("Sve");
   const configured = isSupabaseConfigured();
 
+  const gradovi = useMemo(() => {
+    const set = new Set<string>();
+    salons.forEach((s) => {
+      if (s.grad) set.add(s.grad);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "sr"));
+  }, [salons]);
+
   const filtered = useMemo(() => {
-    if (filter === "Sve") return salons;
-    return salons.filter((s) => s.kategorija === filter);
-  }, [salons, filter]);
+    return salons.filter((s) => {
+      const katOk = filter === "Sve" || s.kategorija === filter;
+      const gradOk = gradFilter === "Sve" || s.grad === gradFilter;
+      return katOk && gradOk;
+    });
+  }, [salons, filter, gradFilter]);
 
   return (
     <div className="bg-[--bg] min-h-screen">
@@ -37,7 +49,7 @@ export default function Saloni() {
                 Saloni
               </h1>
               <p className="text-[--text-muted] mt-2 max-w-xl">
-                Pronađite frizerske salone, berbernice i salone lepote u svom gradu. Filtrirajte po kategoriji.
+                Pronađite frizerske salone, berbernice i salone lepote u svom gradu. Filtrirajte po kategoriji i gradu.
               </p>
             </div>
             <Link
@@ -54,7 +66,7 @@ export default function Saloni() {
             </div>
           )}
 
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-2 mb-6">
             {(["Sve", ...SALON_KATEGORIJE] as Filter[]).map((k) => (
               <button
                 key={k}
@@ -68,6 +80,36 @@ export default function Saloni() {
                 {k}
               </button>
             ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3 mb-8">
+            <label htmlFor="grad-filter" className="text-sm text-[--text-muted]">
+              Grad:
+            </label>
+            <select
+              id="grad-filter"
+              value={gradFilter}
+              onChange={(e) => setGradFilter(e.target.value)}
+              className="bg-[#0e1120] border border-[--border] rounded-full px-4 py-2 text-sm focus:outline-none focus:border-[--accent] min-w-[160px]"
+            >
+              <option value="Sve">Svi gradovi</option>
+              {gradovi.map((g) => (
+                <option key={g} value={g}>
+                  {g}
+                </option>
+              ))}
+            </select>
+            {gradFilter !== "Sve" && (
+              <button
+                onClick={() => setGradFilter("Sve")}
+                className="text-xs text-[--text-faint] hover:text-white underline"
+              >
+                Poništi grad
+              </button>
+            )}
+            {gradovi.length === 0 && !loading && (
+              <span className="text-xs text-[--text-faint]">Još nema gradova (dodajte salone sa gradom)</span>
+            )}
           </div>
 
           {loading ? (
@@ -88,8 +130,14 @@ export default function Saloni() {
           ) : filtered.length === 0 ? (
             <div className="text-center py-16 bg-[--surface] border border-[--border] rounded-2xl">
               <Store className="mx-auto text-[--text-faint] mb-3" size={28} />
-              <p className="text-[--text-muted]">Nema salona za kategoriju “{filter}”.</p>
-              <p className="text-sm text-[--text-faint] mt-1">Dodaj prvi salon u adminu.</p>
+              <p className="text-[--text-muted]">
+                Nema salona za {filter !== "Sve" ? `kategoriju “${filter}”` : ""}{" "}
+                {gradFilter !== "Sve" ? `u gradu “${gradFilter}”` : ""}
+                {filter === "Sve" && gradFilter === "Sve" ? "ovaj filter" : ""}.
+              </p>
+              <p className="text-sm text-[--text-faint] mt-1">
+                Pokušajte drugim filterom ili dodajte salon u adminu.
+              </p>
             </div>
           ) : (
             <>
