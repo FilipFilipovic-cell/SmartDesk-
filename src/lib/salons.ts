@@ -1,5 +1,5 @@
 // Tipovi i servis za tabelu `salons`
-// Kolone: id, ime, slika, opis, kategorija, created_at, updated_at
+// Kolone: id, ime, slika, opis, kategorija, grad, created_at, updated_at
 
 import { supabase } from "./supabase";
 
@@ -26,6 +26,8 @@ export type Salon = {
   slika: string | null; // public URL iz storage-a
   opis: string | null;
   kategorija: SalonKategorija;
+  grad: string | null;
+  radno_vreme: string | null;
   owner_id: string | null;
   created_at: string;
   updated_at: string;
@@ -36,6 +38,8 @@ export type SalonInsert = {
   slika?: string | null;
   opis?: string | null;
   kategorija: SalonKategorija;
+  grad?: string | null;
+  radno_vreme?: string | null;
 };
 
 export type SalonUpdate = Partial<SalonInsert>;

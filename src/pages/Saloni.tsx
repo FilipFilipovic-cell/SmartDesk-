@@ -124,6 +124,12 @@ export default function Saloni() {
                     </div>
                     <div className="p-4 flex flex-col flex-1">
                       <h3 className="font-semibold text-[17px] leading-tight">{s.ime}</h3>
+                      {(s.grad || s.radno_vreme) && (
+                        <p className="text-xs text-[--text-faint] mt-1.5 flex flex-wrap gap-2">
+                          {s.grad && <span>📍 {s.grad}</span>}
+                          {s.radno_vreme && <span>🕒 {s.radno_vreme}</span>}
+                        </p>
+                      )}
                       <p className="text-sm text-[--text-muted] mt-1.5 line-clamp-3 flex-1">
                         {s.opis || "Bez opisa."}
                       </p>

@@ -20,6 +20,8 @@ type FormState = {
   ime: string;
   opis: string;
   kategorija: SalonKategorija;
+  grad: string;
+  radno_vreme: string;
   file: File | null;
   preview: string | null;
 };
@@ -28,6 +30,8 @@ const emptyForm: FormState = {
   ime: "",
   opis: "",
   kategorija: "Frizerski salon",
+  grad: "",
+  radno_vreme: "",
   file: null,
   preview: null,
 };
@@ -96,6 +100,8 @@ export default function AdminSaloni() {
       ime: s.ime,
       opis: s.opis ?? "",
       kategorija: s.kategorija,
+      grad: s.grad ?? "",
+      radno_vreme: s.radno_vreme ?? "",
       file: null,
       preview: s.slika,
     });
@@ -128,19 +134,18 @@ export default function AdminSaloni() {
     setSubmitting(true);
     setMsg(null);
     try {
+      const payload = {
+        ime: form.ime.trim(),
+        opis: form.opis.trim() || null,
+        kategorija: form.kategorija,
+        grad: form.grad.trim() || null,
+        radno_vreme: form.radno_vreme.trim() || null,
+      };
       if (editing) {
-        await updateSalonWithImage(
-          editing.id,
-          { ime: form.ime.trim(), opis: form.opis.trim() || null, kategorija: form.kategorija },
-          form.file,
-          editing.slika
-        );
+        await updateSalonWithImage(editing.id, payload, form.file, editing.slika);
         setMsg(`Izmenjeno: ${form.ime}`);
       } else {
-        await createSalonWithImage(
-          { ime: form.ime.trim(), opis: form.opis.trim() || null, kategorija: form.kategorija },
-          form.file
-        );
+        await createSalonWithImage(payload, form.file);
         setMsg(`Dodato: ${form.ime}`);
       }
       setEditing(null);
@@ -226,7 +231,7 @@ export default function AdminSaloni() {
                   {editing ? "Izmeni salon" : "Dodaj salon"}
                 </h2>
                 <p className="text-sm text-[--text-muted] mt-1">
-                  Jedan nalog = jedan salon. Polja: <span className="text-white">ime*</span>, slika, opis, kategorija*
+                  Jedan nalog = jedan salon. Polja: <span className="text-white">ime*</span>, kategorija*, grad, radno vreme, slika, opis
                 </p>
 
                 {!configured && (
@@ -260,6 +265,28 @@ export default function AdminSaloni() {
                         </option>
                       ))}
                     </select>
+                  </label>
+
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">Grad</span>
+                    <input
+                      value={form.grad}
+                      onChange={(e) => setForm((v) => ({ ...v, grad: e.target.value }))}
+                      placeholder="npr. Beograd"
+                      maxLength={60}
+                      className="w-full bg-[#0e1120] border border-[--border] rounded-xl px-3 py-2.5 text-sm placeholder:text-[--text-faint] focus:outline-none focus:border-[--accent]"
+                    />
+                  </label>
+
+                  <label className="block space-y-1.5">
+                    <span className="text-sm font-medium">Radno vreme</span>
+                    <input
+                      value={form.radno_vreme}
+                      onChange={(e) => setForm((v) => ({ ...v, radno_vreme: e.target.value }))}
+                      placeholder="npr. Pon-Pet 09:00-20:00"
+                      maxLength={100}
+                      className="w-full bg-[#0e1120] border border-[--border] rounded-xl px-3 py-2.5 text-sm placeholder:text-[--text-faint] focus:outline-none focus:border-[--accent]"
+                    />
                   </label>
 
                   <label className="block space-y-1.5">
@@ -388,6 +415,12 @@ export default function AdminSaloni() {
                       </div>
                       <div className="p-4 flex flex-col flex-1">
                         <h4 className="font-semibold leading-tight">{s.ime}</h4>
+                        {(s.grad || s.radno_vreme) && (
+                          <p className="text-xs text-[--text-faint] mt-1 flex flex-wrap gap-1.5">
+                            {s.grad && <span>📍 {s.grad}</span>}
+                            {s.radno_vreme && <span>🕒 {s.radno_vreme}</span>}
+                          </p>
+                        )}
                         <p className="text-sm text-[--text-muted] mt-1 line-clamp-2 flex-1">{s.opis || "Bez opisa."}</p>
                         <div className="flex gap-2 mt-3">
                           <button
