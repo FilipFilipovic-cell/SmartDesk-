@@ -13,7 +13,11 @@ export function useSalons() {
       const data = await getSalons();
       setSalons(data);
     } catch (e: unknown) {
-      setError(e instanceof Error ? e.message : String(e));
+      if (e && typeof e === "object" && "message" in e) {
+        setError(String((e as { message: unknown }).message));
+      } else {
+        setError(e instanceof Error ? e.message : String(e));
+      }
     } finally {
       setLoading(false);
     }
