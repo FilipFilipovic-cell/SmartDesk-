@@ -7,6 +7,7 @@ export default function Signup() {
   const { signUp } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -16,6 +17,17 @@ export default function Signup() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    const normalizedPhone = phone.trim().replace(/\s+/g, "");
+    if (!normalizedPhone) {
+      setError("Broj telefona je obavezan.");
+      return;
+    }
+    // dozvoli +381, 06x, sa razmacima/crticama
+    const phoneOk = /^(\+381|0381|06|\+06)[0-9\s\-/]{6,15}$/.test(phone.trim()) || /^[0-9+\s\-/]{8,15}$/.test(phone.trim());
+    if (!phoneOk) {
+      setError("Unesite ispravan broj telefona (npr. 064 123 4567 ili +381 64 123 4567).");
+      return;
+    }
     if (password !== confirm) {
       setError("Lozinke se ne poklapaju.");
       return;
@@ -26,7 +38,7 @@ export default function Signup() {
     }
     setLoading(true);
     try {
-      await signUp(email.trim(), password);
+      await signUp(email.trim(), password, normalizedPhone);
       setDone(true);
       // Ako je email potvrda isključena u Supabase Auth Settings, korisnik je odmah ulogovan
       setTimeout(() => navigate("/prijava"), 1500);
@@ -83,6 +95,20 @@ export default function Signup() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="ime@salon.com"
+            className="w-full rounded-xl bg-[--surface-2] border border-white/10 px-4 py-3 text-[14px] text-white placeholder:text-[--text-faint] focus:border-[--accent] outline-none"
+          />
+        </div>
+        <div>
+          <label htmlFor="phone" className="block text-[13px] font-medium text-[--text-muted] mb-1.5">
+            Broj telefona *
+          </label>
+          <input
+            id="phone"
+            type="tel"
+            required
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            placeholder="064 123 4567"
             className="w-full rounded-xl bg-[--surface-2] border border-white/10 px-4 py-3 text-[14px] text-white placeholder:text-[--text-faint] focus:border-[--accent] outline-none"
           />
         </div>
