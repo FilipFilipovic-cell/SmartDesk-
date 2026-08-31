@@ -10,6 +10,7 @@ export const brand = {
 export const nav = [
   { label: "Kako funkcioniše", href: "#kako-funkcionise" },
   { label: "Mogućnosti", href: "#mogucnosti" },
+  { label: "Saloni", href: "#/saloni" },
   { label: "Cene", href: "#cene" },
   { label: "Pitanja", href: "#pitanja" },
 ];
