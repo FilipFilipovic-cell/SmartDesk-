@@ -71,7 +71,8 @@ export default function SalonDetail() {
         setMsgs((m) => [...m, { from: "bot", text: odgovor }]);
       }
     } catch (err: unknown) {
-      setMsgs((m) => [...m, { from: "bot", text: `Greška AI: ${err instanceof Error ? err.message : String(err)}` }]);
+      const msg = err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : err instanceof Error ? err.message : String(err);
+      setMsgs((m) => [...m, { from: "bot", text: `Greška AI: ${msg}` }]);
     } finally {
       setAiLoading(false);
     }
@@ -100,7 +101,8 @@ export default function SalonDetail() {
         },
       ]);
     } catch (err: unknown) {
-      setMsgs((m) => [...m, { from: "bot", text: `Greška pri zakazivanju: ${err instanceof Error ? err.message : String(err)}` }]);
+      const msg = err && typeof err === "object" && "message" in err ? String((err as { message: unknown }).message) : err instanceof Error ? err.message : String(err);
+      setMsgs((m) => [...m, { from: "bot", text: `Greška pri zakazivanju: ${msg}` }]);
     } finally {
       setAiLoading(false);
     }
