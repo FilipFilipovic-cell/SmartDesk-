@@ -5,6 +5,7 @@ import Signup from "./pages/Signup";
 import Login from "./pages/Login";
 import Contact from "./pages/Contact";
 import Saloni from "./pages/Saloni";
+import SalonDetail from "./pages/SalonDetail";
 import AdminSaloni from "./pages/AdminSaloni";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/saloni" element={<Saloni />} />
+          <Route path="/saloni/:id" element={<SalonDetail />} />
           <Route path="/admin/saloni" element={<AdminSaloni />} />
           <Route path="/registracija" element={<Signup />} />
           <Route path="/prijava" element={<Login />} />

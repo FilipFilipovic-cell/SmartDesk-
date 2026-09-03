@@ -146,8 +146,9 @@ export default function Saloni() {
               </p>
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {filtered.map((s) => (
-                  <article
+                  <Link
                     key={s.id}
+                    to={`/saloni/${s.id}`}
                     className="bg-[--surface] border border-[--border] rounded-2xl overflow-hidden hover:border-white/10 transition-colors flex flex-col"
                   >
                     <div className="h-48 bg-[#0e1120] relative overflow-hidden">
@@ -180,10 +181,10 @@ export default function Saloni() {
                         {s.opis || "Bez opisa."}
                       </p>
                       <p className="text-xs text-[--text-faint] mt-3">
-                        {new Date(s.created_at).toLocaleDateString("sr-RS")}
+                        {new Date(s.created_at).toLocaleDateString("sr-RS")} • Klik za AI chat →
                       </p>
                     </div>
-                  </article>
+                  </Link>
                 ))}
               </div>
             </>
