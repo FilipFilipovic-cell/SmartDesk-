@@ -13,6 +13,7 @@ import {
   deleteSalonImageByUrl,
   getMySalons,
 } from "../lib/salons";
+import { getMyTermini, updateTerminStatus, type Termin } from "../lib/termini";
 import { isSupabaseConfigured } from "../lib/supabase";
 import { ArrowLeft, Trash2, Pencil, Plus, X, ImageOff, Loader2, LogOut } from "lucide-react";
 
@@ -40,6 +41,7 @@ export default function AdminSaloni() {
   const { user, loading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [salons, setSalons] = useState<Salon[]>([]);
+  const [termini, setTermini] = useState<Termin[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
@@ -56,6 +58,11 @@ export default function AdminSaloni() {
     try {
       const data = await getMySalons();
       setSalons(data);
+      try {
+        setTermini(await getMyTermini());
+      } catch {
+        /* tabeli termini možda još nije pokrenut SQL — ignoriši */
+      }
     } catch (e: unknown) {
       setError(e instanceof Error ? e.message : String(e));
     } finally {
@@ -442,6 +449,40 @@ export default function AdminSaloni() {
                   ))}
                 </div>
               )}
+
+              {/* Automatski termini - AI */}
+              <div className="mt-8">
+                <h3 className="font-semibold flex items-center gap-2">
+                  Automatski termini <span className="text-xs font-normal bg-[--accent-soft] text-[--accent-2] px-2 py-0.5 rounded-full border border-[--accent-line]">AI</span>
+                  <span className="text-[--text-muted] font-normal">({termini.length})</span>
+                </h3>
+                <p className="text-xs text-[--text-faint] mt-1">AI automatski kreira termine nakon razgovora sa klijentom. Ovde ih potvrđujete/otkazujete.</p>
+                {termini.length === 0 ? (
+                  <div className="mt-3 text-center py-8 bg-[--surface] border border-[--border] rounded-2xl text-sm text-[--text-muted]">
+                    Još nema automatskih termina.
+                  </div>
+                ) : (
+                  <div className="mt-3 space-y-2">
+                    {termini.map((t) => (
+                      <div key={t.id} className="bg-[--surface] border border-[--border] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                          <p className="text-sm font-medium">{t.klijent_ime} — {t.usluga}</p>
+                          <p className="text-xs text-[--text-muted]">{new Date(t.pocetak).toLocaleString("sr-RS")} → {new Date(t.kraj).toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}{t.klijent_telefon ? ` • ${t.klijent_telefon}` : ""}</p>
+                          <p className="text-xs mt-1"><span className={`px-2 py-0.5 rounded-full border text-xs ${t.status === "zakazan" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : t.status === "potvrdjen" ? "bg-green-500/15 border-green-500/30 text-green-300" : "bg-white/5 border-white/10 text-[--text-muted]"}`}>{t.status}</span> <span className="text-[--text-faint]">• {t.izvor === "ai" ? "AI" : "ručno"}</span></p>
+                        </div>
+                        <div className="flex gap-1.5 shrink-0">
+                          {t.status === "zakazan" && (
+                            <button onClick={async () => { await updateTerminStatus(t.id, "potvrdjen"); refresh(); }} className="text-xs bg-white text-[#0b0d16] px-3 py-1.5 rounded-full font-medium">Potvrdi</button>
+                          )}
+                          {t.status !== "otkazan" && (
+                            <button onClick={async () => { await updateTerminStatus(t.id, "otkazan"); refresh(); }} className="text-xs border border-white/15 px-3 py-1.5 rounded-full hover:bg-white/5">Otkaži</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
