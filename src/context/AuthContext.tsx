@@ -9,6 +9,8 @@ type AuthCtx = {
   signUp: (email: string, password: string, phone?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
+  updatePassword: (newPassword: string) => Promise<void>;
 };
 
 const Ctx = createContext<AuthCtx | null>(null);
@@ -55,7 +57,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (error) throw error;
   }, []);
 
-  return <Ctx.Provider value={{ user, session, loading, signUp, signIn, signOut }}>{children}</Ctx.Provider>;
+  const resetPassword = useCallback(async (email: string) => {
+    const redirectTo =
+      window.location.origin + window.location.pathname + "#/reset-lozinke";
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo,
+    });
+    if (error) throw error;
+  }, []);
+
+  const updatePassword = useCallback(async (newPassword: string) => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
+  }, []);
+
+  return <Ctx.Provider value={{ user, session, loading, signUp, signIn, signOut, resetPassword, updatePassword }}>{children}</Ctx.Provider>;
 }
 
 // eslint-disable-next-line react-refresh/only-export-components

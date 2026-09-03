@@ -7,6 +7,8 @@ import Contact from "./pages/Contact";
 import Saloni from "./pages/Saloni";
 import SalonDetail from "./pages/SalonDetail";
 import AdminSaloni from "./pages/AdminSaloni";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
           <Route path="/admin/saloni" element={<AdminSaloni />} />
           <Route path="/registracija" element={<Signup />} />
           <Route path="/prijava" element={<Login />} />
+          <Route path="/zaboravljena-lozinka" element={<ForgotPassword />} />
+          <Route path="/reset-lozinke" element={<ResetPassword />} />
           <Route path="/kontakt" element={<Contact />} />
         </Routes>
       </HashRouter>
