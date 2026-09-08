@@ -4,7 +4,8 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { getSalonById, type Salon } from "../lib/salons";
 import { createTerminAI, predloziSlobodne } from "../lib/termini";
-import { ArrowLeft, MapPin, Clock, Send, Loader2, Bot } from "lucide-react";
+import { getRecenzije, createRecenzija, prosecnaOcena, type Recenzija } from "../lib/recenzije";
+import { ArrowLeft, MapPin, Clock, Send, Loader2, Bot, Star } from "lucide-react";
 
 type Msg = { from: "bot" | "user"; text: string; slots?: { pocetak: string; kraj: string }[] };
 
@@ -16,6 +17,11 @@ export default function SalonDetail() {
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [input, setInput] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
+  const [recenzije, setRecenzije] = useState<Recenzija[]>([]);
+  const [rIme, setRIme] = useState("");
+  const [rOcena, setROcena] = useState(5);
+  const [rKomentar, setRKomentar] = useState("");
+  const [rMsg, setRMsg] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -29,6 +35,7 @@ export default function SalonDetail() {
               text: `Zdravo! Ja sam SmartDesk AI za ${s.ime} (${s.grad || "—"}). Kako mogu da pomognem? Možete pitati za slobodan termin, npr. "ima li slobodno sutra u 10h?"`,
             },
           ]);
+          getRecenzije(s.id).then(setRecenzije).catch(() => {});
         }
       })
       .catch((e) => setError(e instanceof Error ? e.message : String(e)))
@@ -131,6 +138,72 @@ export default function SalonDetail() {
                 <span className="inline-flex items-center gap-1"><Clock size={14} /> {salon.radno_vreme || "—"}</span>
               </p>
               <p className="text-[--text-muted] mt-4 leading-relaxed">{salon.opis || "Bez opisa."}</p>
+
+              {/* Recenzije */}
+              <div className="mt-8 bg-[--surface] border border-[--border] rounded-2xl p-5">
+                {(() => {
+                  const { avg, count } = prosecnaOcena(recenzije);
+                  return (
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="flex items-center gap-1">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <Star key={n} size={16} className={avg !== null && n <= Math.round(avg) ? "fill-yellow-400 text-yellow-400" : "text-white/20"} />
+                        ))}
+                      </div>
+                      <span className="text-sm font-medium">{avg !== null ? `${avg} / 5` : "Bez ocena"}</span>
+                      <span className="text-xs text-[--text-faint]">({count} recenzija)</span>
+                    </div>
+                  );
+                })()}
+
+                <form
+                  onSubmit={async (e) => {
+                    e.preventDefault();
+                    setRMsg(null);
+                    try {
+                      const r = await createRecenzija({ salon_id: salon.id, klijent_ime: rIme, ocena: rOcena, komentar: rKomentar });
+                      setRecenzije((v) => [r, ...v]);
+                      setRMsg("Hvala na recenziji!");
+                      setRIme("");
+                      setRKomentar("");
+                    } catch (err: unknown) {
+                      setRMsg(err instanceof Error ? err.message : String(err));
+                    }
+                  }}
+                  className="space-y-3 border-b border-white/10 pb-4 mb-4"
+                >
+                  <div className="grid grid-cols-2 gap-3">
+                    <input value={rIme} onChange={(e) => setRIme(e.target.value)} placeholder="Vaše ime" required maxLength={60} className="bg-[#0e1120] border border-[--border] rounded-xl px-3 py-2 text-sm placeholder:text-[--text-faint] focus:outline-none focus:border-[--accent]" />
+                    <select value={rOcena} onChange={(e) => setROcena(Number(e.target.value))} className="bg-[#0e1120] border border-[--border] rounded-xl px-3 py-2 text-sm focus:outline-none focus:border-[--accent]">
+                      {[5, 4, 3, 2, 1].map((n) => (
+                        <option key={n} value={n}>
+                          {n} ★
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <textarea value={rKomentar} onChange={(e) => setRKomentar(e.target.value)} placeholder="Komentar (opciono)" maxLength={500} rows={2} className="w-full bg-[#0e1120] border border-[--border] rounded-xl px-3 py-2 text-sm placeholder:text-[--text-faint] focus:outline-none focus:border-[--accent] resize-none" />
+                  <button type="submit" className="w-full bg-white text-[#0b0d16] rounded-full py-2 text-sm font-semibold hover:bg-white/90">Ostavi recenziju</button>
+                  {rMsg && <p className="text-xs text-center bg-white/5 rounded-lg py-2">{rMsg}</p>}
+                </form>
+
+                <div className="space-y-3 max-h-[320px] overflow-auto pr-1">
+                  {recenzije.length === 0 ? (
+                    <p className="text-sm text-[--text-faint] text-center py-4">Još nema recenzija. Budite prvi!</p>
+                  ) : (
+                    recenzije.map((r) => (
+                      <div key={r.id} className="bg-[#0e1120] border border-white/5 rounded-xl p-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">{r.klijent_ime}</p>
+                          <span className="text-xs flex items-center gap-1">{r.ocena} <Star size={12} className="fill-yellow-400 text-yellow-400" /></span>
+                        </div>
+                        {r.komentar && <p className="text-sm text-[--text-muted] mt-1">{r.komentar}</p>}
+                        <p className="text-xs text-[--text-faint] mt-1">{new Date(r.created_at).toLocaleDateString("sr-RS")}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
             </div>
 
             <div className="bg-[--surface] border border-[--border] rounded-2xl flex flex-col h-[560px]">

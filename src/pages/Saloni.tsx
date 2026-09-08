@@ -13,6 +13,8 @@ export default function Saloni() {
   const { salons, loading, error } = useSalons();
   const [filter, setFilter] = useState<Filter>("Sve");
   const [gradFilter, setGradFilter] = useState<string>("Sve");
+  const [search, setSearch] = useState("");
+  const [sortGrad, setSortGrad] = useState<"none" | "asc" | "desc">("none");
   const configured = isSupabaseConfigured();
 
   const gradovi = useMemo(() => {
@@ -24,12 +26,21 @@ export default function Saloni() {
   }, [salons]);
 
   const filtered = useMemo(() => {
-    return salons.filter((s) => {
+    let out = salons.filter((s) => {
       const katOk = filter === "Sve" || s.kategorija === filter;
       const gradOk = gradFilter === "Sve" || s.grad === gradFilter;
-      return katOk && gradOk;
+      const q = search.trim().toLowerCase();
+      const searchOk = !q || s.ime.toLowerCase().includes(q) || (s.opis && s.opis.toLowerCase().includes(q)) || (s.grad && s.grad.toLowerCase().includes(q));
+      return katOk && gradOk && searchOk;
     });
-  }, [salons, filter, gradFilter]);
+    if (sortGrad !== "none") {
+      out = [...out].sort((a, b) => {
+        const ga = (a.grad || "").localeCompare(b.grad || "", "sr");
+        return sortGrad === "asc" ? ga : -ga;
+      });
+    }
+    return out;
+  }, [salons, filter, gradFilter, search, sortGrad]);
 
   return (
     <div className="bg-[--bg] min-h-screen">
@@ -107,6 +118,26 @@ export default function Saloni() {
                 Poništi grad
               </button>
             )}
+            <label htmlFor="sort-grad" className="text-sm text-[--text-muted] ml-2">
+              Sort:
+            </label>
+            <select
+              id="sort-grad"
+              value={sortGrad}
+              onChange={(e) => setSortGrad(e.target.value as typeof sortGrad)}
+              className="bg-[#0e1120] border border-[--border] rounded-full px-3 py-2 text-sm focus:outline-none focus:border-[--accent]"
+            >
+              <option value="none">Bez sortiranja</option>
+              <option value="asc">Grad A-Z</option>
+              <option value="desc">Grad Z-A</option>
+            </select>
+            <input
+              type="search"
+              placeholder="Pretraga po imenu, opisu, gradu..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="ml-auto bg-[#0e1120] border border-[--border] rounded-full px-4 py-2 text-sm placeholder:text-[--text-faint] focus:outline-none focus:border-[--accent] min-w-[220px] flex-1 max-w-[320px]"
+            />
             {gradovi.length === 0 && !loading && (
               <span className="text-xs text-[--text-faint]">Još nema gradova (dodajte salone sa gradom)</span>
             )}
