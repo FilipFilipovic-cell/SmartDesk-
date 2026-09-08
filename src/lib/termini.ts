@@ -52,6 +52,10 @@ export async function createTerminAI(payload: TerminInsert): Promise<Termin> {
     .select()
     .single();
   if (error) throw error;
+  // Obaveštenja (MVP: log + za produkciju povezati Resend/SMTP)
+  // Email vlasniku: novi termin, Email klijentu: potvrda
+  console.log(`[Obaveštenje] Novi AI termin: salon ${payload.salon_id}, klijent ${payload.klijent_ime} (${payload.klijent_telefon || "bez tel"}), ${payload.pocetak}`);
+  // za produkciju: await supabase.functions.invoke('send-email', { body: { to: vlasnikEmail, subject: 'Novi termin', ... } })
   return data as Termin;
 }
 

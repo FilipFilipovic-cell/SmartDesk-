@@ -7,6 +7,7 @@ import Contact from "./pages/Contact";
 import Saloni from "./pages/Saloni";
 import SalonDetail from "./pages/SalonDetail";
 import AdminSaloni from "./pages/AdminSaloni";
+import AdminOdobravanje from "./pages/AdminOdobravanje";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 
@@ -19,6 +20,7 @@ function App() {
           <Route path="/saloni" element={<Saloni />} />
           <Route path="/saloni/:id" element={<SalonDetail />} />
           <Route path="/admin/saloni" element={<AdminSaloni />} />
+          <Route path="/admin/odobravanje" element={<AdminOdobravanje />} />
           <Route path="/registracija" element={<Signup />} />
           <Route path="/prijava" element={<Login />} />
           <Route path="/zaboravljena-lozinka" element={<ForgotPassword />} />
