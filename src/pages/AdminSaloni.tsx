@@ -15,7 +15,7 @@ import {
 } from "../lib/salons";
 import { getMyTermini, updateTerminStatus, type Termin } from "../lib/termini";
 import { isSupabaseConfigured } from "../lib/supabase";
-import { ArrowLeft, Trash2, Pencil, Plus, X, ImageOff, Loader2, LogOut } from "lucide-react";
+import { ArrowLeft, Trash2, Pencil, Plus, X, ImageOff, Loader2, LogOut, CalendarDays, List } from "lucide-react";
 
 type FormState = {
   ime: string;
@@ -49,6 +49,8 @@ export default function AdminSaloni() {
   const [submitting, setSubmitting] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [terminiView, setTerminiView] = useState<"lista" | "kalendar">("kalendar");
+  const [selectedDay, setSelectedDay] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const configured = isSupabaseConfigured();
 
   const refresh = async () => {
@@ -452,35 +454,94 @@ export default function AdminSaloni() {
 
               {/* Automatski termini - AI */}
               <div className="mt-8">
-                <h3 className="font-semibold flex items-center gap-2">
-                  Automatski termini <span className="text-xs font-normal bg-[--accent-soft] text-[--accent-2] px-2 py-0.5 rounded-full border border-[--accent-line]">AI</span>
-                  <span className="text-[--text-muted] font-normal">({termini.length})</span>
-                </h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-semibold flex items-center gap-2">
+                    Automatski termini <span className="text-xs font-normal bg-[--accent-soft] text-[--accent-2] px-2 py-0.5 rounded-full border border-[--accent-line]">AI</span>
+                    <span className="text-[--text-muted] font-normal">({termini.length})</span>
+                  </h3>
+                  <div className="flex items-center gap-1 bg-[#0e1120] border border-[--border] rounded-full p-1">
+                    <button onClick={() => setTerminiView("kalendar")} className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${terminiView === "kalendar" ? "bg-white text-[#0b0d16]" : "text-[--text-muted]"}`}><CalendarDays size={12} /> Kalendar</button>
+                    <button onClick={() => setTerminiView("lista")} className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${terminiView === "lista" ? "bg-white text-[#0b0d16]" : "text-[--text-muted]"}`}><List size={12} /> Lista</button>
+                  </div>
+                </div>
                 <p className="text-xs text-[--text-faint] mt-1">AI automatski kreira termine nakon razgovora sa klijentom. Ovde ih potvrđujete/otkazujete.</p>
-                {termini.length === 0 ? (
-                  <div className="mt-3 text-center py-8 bg-[--surface] border border-[--border] rounded-2xl text-sm text-[--text-muted]">
-                    Još nema automatskih termina.
+
+                {terminiView === "kalendar" && termini.length > 0 && (
+                  <div className="mt-4">
+                    <div className="grid grid-cols-7 gap-1.5">
+                      {Array.from({ length: 7 }).map((_, i) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() + i);
+                        const iso = d.toISOString().slice(0, 10);
+                        const count = termini.filter((t) => t.pocetak.slice(0, 10) === iso && t.status !== "otkazan").length;
+                        const isSelected = selectedDay === iso;
+                        const isToday = i === 0;
+                        return (
+                          <button
+                            key={iso}
+                            onClick={() => setSelectedDay(iso)}
+                            className={`rounded-xl border p-2 text-center transition-colors ${isSelected ? "bg-white text-[#0b0d16] border-white" : "bg-[--surface] border-[--border] hover:border-white/20 text-white"}`}
+                          >
+                            <p className="text-[11px] uppercase tracking-wide opacity-70">{d.toLocaleDateString("sr-RS", { weekday: "short" })}</p>
+                            <p className="text-lg font-bold leading-none mt-1">{d.getDate()}</p>
+                            <p className="text-[11px] mt-1">{count} {count === 1 ? "termin" : "termina"}</p>
+                            {isToday && !isSelected && <span className="inline-block mt-1 w-1 h-1 rounded-full bg-[--accent]" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    <div className="mt-4">
+                      {(() => {
+                        const dayTermini = termini.filter((t) => t.pocetak.slice(0, 10) === selectedDay);
+                        if (dayTermini.length === 0) return <div className="text-center py-6 bg-[--surface] border border-[--border] rounded-xl text-sm text-[--text-muted]">Nema termina za {new Date(selectedDay).toLocaleDateString("sr-RS")}.</div>;
+                        return (
+                          <div className="space-y-2">
+                            <p className="text-xs text-[--text-faint]">{new Date(selectedDay).toLocaleDateString("sr-RS", { weekday: "long", day: "numeric", month: "long" })} — {dayTermini.length} termina</p>
+                            {dayTermini
+                              .sort((a, b) => new Date(a.pocetak).getTime() - new Date(b.pocetak).getTime())
+                              .map((t) => (
+                                <div key={t.id} className="bg-[--surface] border border-[--border] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                  <div>
+                                    <p className="text-sm font-medium">{new Date(t.pocetak).toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })} — {t.klijent_ime} • {t.usluga}</p>
+                                    <p className="text-xs text-[--text-muted]">{t.klijent_telefon ? `${t.klijent_telefon} • ` : ""}<span className={`px-2 py-0.5 rounded-full border text-xs ${t.status === "zakazan" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : t.status === "potvrdjen" ? "bg-green-500/15 border-green-500/30 text-green-300" : "bg-white/5 border-white/10 text-[--text-muted]"}`}>{t.status}</span></p>
+                                  </div>
+                                  <div className="flex gap-1.5 shrink-0">
+                                    {t.status === "zakazan" && <button onClick={async () => { await updateTerminStatus(t.id, "potvrdjen"); refresh(); }} className="text-xs bg-white text-[#0b0d16] px-3 py-1.5 rounded-full font-medium">Potvrdi</button>}
+                                    {t.status !== "otkazan" && <button onClick={async () => { await updateTerminStatus(t.id, "otkazan"); refresh(); }} className="text-xs border border-white/15 px-3 py-1.5 rounded-full hover:bg-white/5">Otkaži</button>}
+                                  </div>
+                                </div>
+                              ))}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
-                ) : (
-                  <div className="mt-3 space-y-2">
-                    {termini.map((t) => (
-                      <div key={t.id} className="bg-[--surface] border border-[--border] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                        <div>
-                          <p className="text-sm font-medium">{t.klijent_ime} — {t.usluga}</p>
-                          <p className="text-xs text-[--text-muted]">{new Date(t.pocetak).toLocaleString("sr-RS")} → {new Date(t.kraj).toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}{t.klijent_telefon ? ` • ${t.klijent_telefon}` : ""}</p>
-                          <p className="text-xs mt-1"><span className={`px-2 py-0.5 rounded-full border text-xs ${t.status === "zakazan" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : t.status === "potvrdjen" ? "bg-green-500/15 border-green-500/30 text-green-300" : "bg-white/5 border-white/10 text-[--text-muted]"}`}>{t.status}</span> <span className="text-[--text-faint]">• {t.izvor === "ai" ? "AI" : "ručno"}</span></p>
-                        </div>
-                        <div className="flex gap-1.5 shrink-0">
-                          {t.status === "zakazan" && (
-                            <button onClick={async () => { await updateTerminStatus(t.id, "potvrdjen"); refresh(); }} className="text-xs bg-white text-[#0b0d16] px-3 py-1.5 rounded-full font-medium">Potvrdi</button>
-                          )}
-                          {t.status !== "otkazan" && (
-                            <button onClick={async () => { await updateTerminStatus(t.id, "otkazan"); refresh(); }} className="text-xs border border-white/15 px-3 py-1.5 rounded-full hover:bg-white/5">Otkaži</button>
-                          )}
-                        </div>
+                )}
+
+                {(terminiView === "lista" || termini.length === 0) && (
+                  <>
+                    {termini.length === 0 ? (
+                      <div className="mt-3 text-center py-8 bg-[--surface] border border-[--border] rounded-2xl text-sm text-[--text-muted]">
+                        Još nema automatskih termina.
                       </div>
-                    ))}
-                  </div>
+                    ) : terminiView === "lista" ? (
+                      <div className="mt-3 space-y-2">
+                        {termini.map((t) => (
+                          <div key={t.id} className="bg-[--surface] border border-[--border] rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <div>
+                              <p className="text-sm font-medium">{t.klijent_ime} — {t.usluga}</p>
+                              <p className="text-xs text-[--text-muted]">{new Date(t.pocetak).toLocaleString("sr-RS")} → {new Date(t.kraj).toLocaleTimeString("sr-RS", { hour: "2-digit", minute: "2-digit" })}{t.klijent_telefon ? ` • ${t.klijent_telefon}` : ""}</p>
+                              <p className="text-xs mt-1"><span className={`px-2 py-0.5 rounded-full border text-xs ${t.status === "zakazan" ? "bg-amber-500/15 border-amber-500/30 text-amber-300" : t.status === "potvrdjen" ? "bg-green-500/15 border-green-500/30 text-green-300" : "bg-white/5 border-white/10 text-[--text-muted]"}`}>{t.status}</span> <span className="text-[--text-faint]">• {t.izvor === "ai" ? "AI" : "ručno"}</span></p>
+                            </div>
+                            <div className="flex gap-1.5 shrink-0">
+                              {t.status === "zakazan" && <button onClick={async () => { await updateTerminStatus(t.id, "potvrdjen"); refresh(); }} className="text-xs bg-white text-[#0b0d16] px-3 py-1.5 rounded-full font-medium">Potvrdi</button>}
+                              {t.status !== "otkazan" && <button onClick={async () => { await updateTerminStatus(t.id, "otkazan"); refresh(); }} className="text-xs border border-white/15 px-3 py-1.5 rounded-full hover:bg-white/5">Otkaži</button>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                  </>
                 )}
               </div>
             </div>
