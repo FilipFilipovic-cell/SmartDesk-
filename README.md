@@ -102,7 +102,8 @@ Sledeće funkcionalnosti su najavljene na landing stranici, ali još nisu implem
 
 ## Live Demo
 
-🔗 **[https://filipfilipovic-cell.github.io/SmartDesk-/](https://filipfilipovic-cell.github.io/SmartDesk-/)**
+* **Demo (zamrznut)** — GitHub Pages: 🔗 **[https://filipfilipovic-cell.github.io/SmartDesk-/](https://filipfilipovic-cell.github.io/SmartDesk-/)** (`demo` grana)
+* **Realan projekat** — Vercel (`main`): 🔗 **[https://smartdesk-beige.vercel.app](https://smartdesk-beige.vercel.app)** — saloni, AI chat + automatsko zakazivanje, grad/radno vreme, filter, pretrage, recenzije, kalendar, odobravanje
 
 ---
 
