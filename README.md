@@ -10,9 +10,9 @@ SmartDesk odgovara klijentima, zakazuje termine i preuzima ponavljajuće poruke 
 
 ## Šta je SmartDesk?
 
-SmartDesk je AI recepcioner namenjen salonima lepote, frizerskim salonima, berbernicama, salonima za nokte i spa centrima. Umesto da vlasnik ili osoblje salona ručno odgovaraju na svaku poruku klijenta, SmartDesk preuzima taj razgovor: razume pitanje, odgovara prirodnim jezikom koristeći informacije o salonu i pomaže klijentu da zakaže termin — bez čekanja i bez prekidanja rada sa klijentom koji je fizički u salonu.
+SmartDesk je AI recepcioner namenjen salonima lepote, frizerskim salonima, berbernicama, salonima za nokte i spa centrima. Umesto da vlasnik ili osoblje salona ručno odgovaraju na svaku poruku klijenta, SmartDesk preuzima taj razgovor: razume pitanje, odgovara prirodnim jezikom koristeći informacije o salonu i pomaže klijentu da zakaže termin bez čekanja i bez prekidanja rada sa klijentom koji je fizički u salonu.
 
-Ovaj repozitorijum je **marketinška/landing stranica proizvoda** (React aplikacija), a ne sam AI sistem — napravljena je da ozbiljno predstavi proizvod, objasni kako funkcioniše i pretvori posetioce u korisnike, dok je struktura koda pripremljena za kasnije povezivanje sa pravim backendom i AI mehanizmom.
+Ovaj repozitorijum je **marketinška/landing stranica proizvoda** (React aplikacija), a ne sam AI sistem  napravljena je da ozbiljno predstavi proizvod, objasni kako funkcioniše i pretvori posetioce u korisnike, dok je struktura koda pripremljena za kasnije povezivanje sa pravim backendom i AI mehanizmom.
 
 ## Koji problem rešava
 
