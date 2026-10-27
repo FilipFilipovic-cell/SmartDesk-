@@ -2,7 +2,7 @@
 
 **AI recepcioner vašeg salona.**
 
-SmartDesk odgovara klijentima, zakazuje termine i preuzima ponavljajuće poruke — 24 sata dnevno, 7 dana u nedelji. Ovaj repozitorijum sadrži landing stranicu proizvoda, izgrađenu kao production-ready temelj spreman za povezivanje sa pravim backendom.
+SmartDesk odgovara klijentima, zakazuje termine i preuzima ponavljajuće poruke  24 sata dnevno, 7 dana u nedelji. Ovaj repozitorijum sadrži landing stranicu proizvoda, izgrađenu kao production-ready temelj spreman za povezivanje sa pravim backendom.
 
 ![SmartDesk — hero sekcija](docs/screenshot-hero.png)
 
